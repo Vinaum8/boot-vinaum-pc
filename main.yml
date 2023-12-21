@@ -1,0 +1,71 @@
+---
+- name: Setup Localhost
+  hosts: localhost
+  become: true
+  # vars_files:
+  #   - ../vars/all.yml
+  pre_tasks:
+    - name: Update apt cache (Ubuntu/Debian)
+      apt:
+        update_cache: true
+      when: ansible_os_family == 'Debian'
+
+    - name: install dependencies
+      apt:
+        name: "{{ item }}"
+        state: present
+        update_cache: true
+      loop:
+        - apt-transport-https
+        - ca-certificates
+        - curl
+        - gnupg-agent
+        - software-properties-common
+        - sudo
+        - unzip
+        - python3-pip
+      retries: 5
+
+  tasks:
+    - name: Add Docker GPG apt Key
+      apt_key:
+        url: https://download.docker.com/linux/ubuntu/gpg
+        state: present
+
+    - name: Add Docker Repository
+      apt_repository:
+        repo: deb https://download.docker.com/linux/ubuntu focal stable
+        state: present
+
+    - name: Update apt and install docker-ce
+      apt:
+        name: docker-ce
+        state: present
+        update_cache: true
+
+    - name: install Docker
+      apt:
+        name: docker
+        state: present
+
+    - name: install Applications
+      apt:
+        name: "{{ item }}"
+        state: present
+        update_cache: true
+      loop:
+        - copyq
+        - flameshot
+        - ansible-lint
+        - ansible
+        - vim
+      retries: 5
+
+    - name: Install docker-compose
+      get_url:
+        url: https://github.com/docker/compose/releases/download/v2.17.3/docker-compose-linux-x86_64
+        dest: /usr/local/bin/docker-compose
+
+    - name: debugzin
+      debug:
+        msg: "The User system is {{ ansible_user_id }}"
